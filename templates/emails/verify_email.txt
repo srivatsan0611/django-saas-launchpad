@@ -1,0 +1,20 @@
+Welcome to {{ site_name }}!
+
+Hi{% if user.first_name %} {{ user.first_name }}{% endif %},
+
+Thank you for signing up for {{ site_name }}! We're excited to have you on board.
+
+To get started, please verify your email address by clicking the link below:
+
+{{ verification_url }}
+
+If you didn't create an account with us, you can safely ignore this email.
+
+This verification link will expire in 24 hours.
+
+Best regards,
+The {{ site_name }} Team
+
+---
+If the button above doesn't work, copy and paste this URL into your browser:
+{{ verification_url }}

@@ -163,10 +163,13 @@ class ResendVerificationView(APIView):
                 )
 
             # Generate new verification token
-            user.email_verification_token = str(uuid.uuid4())
+            new_token = str(uuid.uuid4())
+            user.email_verification_token = new_token
             user.save()
 
-            # TODO: Trigger send_verification_email Celery task here (Phase 1.5)
+            # Trigger send_verification_email Celery task
+            from accounts.tasks import send_verification_email
+            send_verification_email.delay(user.id, new_token)
 
             return Response(
                 {'message': 'Verification email sent successfully.'},

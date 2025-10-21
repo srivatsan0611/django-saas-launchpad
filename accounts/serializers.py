@@ -87,7 +87,9 @@ class RegisterSerializer(serializers.ModelSerializer):
             email_verified=False,
         )
 
-        # TODO: Trigger send_verification_email Celery task here (Phase 1.5)
+        # Trigger send_verification_email Celery task
+        from accounts.tasks import send_verification_email
+        send_verification_email.delay(user.id, email_verification_token)
 
         return user
 

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email - {{ site_name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4F46E5;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9fafb;
+            padding: 30px;
+            border: 1px solid #e5e7eb;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #4F46E5;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .url-fallback {
+            font-size: 12px;
+            color: #6b7280;
+            word-break: break-all;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Welcome to {{ site_name }}!</h1>
+    </div>
+
+    <div class="content">
+        <p>Hi{% if user.first_name %} {{ user.first_name }}{% endif %},</p>
+
+        <p>Thank you for signing up for {{ site_name }}! We're excited to have you on board.</p>
+
+        <p>To get started, please verify your email address by clicking the button below:</p>
+
+        <div style="text-align: center;">
+            <a href="{{ verification_url }}" class="button">Verify Email Address</a>
+        </div>
+
+        <p>If you didn't create an account with us, you can safely ignore this email.</p>
+
+        <p><strong>Note:</strong> This verification link will expire in 24 hours.</p>
+
+        <div class="footer">
+            <p>Best regards,<br>The {{ site_name }} Team</p>
+
+            <div class="url-fallback">
+                <p>If the button above doesn't work, copy and paste this URL into your browser:</p>
+                <p>{{ verification_url }}</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
