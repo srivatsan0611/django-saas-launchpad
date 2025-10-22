@@ -178,7 +178,9 @@ class PasswordResetRequestSerializer(serializers.Serializer):
             user.password_reset_token_expires_at = timezone.now() + timedelta(hours=24)
             user.save()
 
-            # TODO: Trigger send_password_reset_email Celery task here (Phase 1.6)
+            # Trigger send_password_reset_email Celery task
+            from accounts.tasks import send_password_reset_email
+            send_password_reset_email.delay(user.id, reset_token)
 
             return user
         except User.DoesNotExist:
