@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
 from rest_framework import serializers
-from .models import User
+from .models import User, MagicLink
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -289,3 +289,95 @@ class EmailVerificationSerializer(serializers.Serializer):
         self.user.save()
 
         return self.user
+
+
+class RequestMagicLinkSerializer(serializers.Serializer):
+    """
+    Serializer for requesting a magic link.
+    Takes email and creates a magic link for passwordless authentication.
+    """
+    email = serializers.EmailField(required=True)
+
+    def validate_email(self, value):
+        """
+        Validate that a user with this email exists.
+        """
+        try:
+            user = User.objects.get(email=value)
+            if not user.is_active:
+                raise serializers.ValidationError(
+                    "User account is disabled."
+                )
+        except User.DoesNotExist:
+            # Don't reveal whether a user exists or not for security
+            # But we still validate the email format
+            pass
+        return value
+
+    def save(self):
+        """
+        Create a magic link for the user.
+        """
+        email = self.validated_data['email']
+
+        try:
+            user = User.objects.get(email=email)
+
+            # Create magic link
+            magic_link = MagicLink.objects.create(user=user)
+
+            # Trigger send_magic_link_email Celery task
+            from accounts.tasks import send_magic_link_email
+            send_magic_link_email.delay(magic_link.id)
+
+            return magic_link
+        except User.DoesNotExist:
+            # Silently fail for security (don't reveal if user exists)
+            return None
+
+
+class VerifyMagicLinkSerializer(serializers.Serializer):
+    """
+    Serializer for verifying a magic link.
+    Validates token and returns authenticated user.
+    """
+    token = serializers.UUIDField(required=True)
+
+    def validate_token(self, value):
+        """
+        Validate that the magic link token is valid.
+        """
+        try:
+            magic_link = MagicLink.objects.get(token=value)
+
+            if magic_link.is_used:
+                raise serializers.ValidationError(
+                    "This magic link has already been used."
+                )
+
+            if magic_link.is_expired():
+                raise serializers.ValidationError(
+                    "This magic link has expired."
+                )
+
+            if not magic_link.user.is_active:
+                raise serializers.ValidationError(
+                    "User account is disabled."
+                )
+
+            self.magic_link = magic_link
+        except MagicLink.DoesNotExist:
+            raise serializers.ValidationError(
+                "Invalid magic link token."
+            )
+
+        return value
+
+    def save(self):
+        """
+        Mark the magic link as used and return the user.
+        """
+        self.magic_link.is_used = True
+        self.magic_link.save()
+
+        return self.magic_link.user

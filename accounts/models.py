@@ -1,6 +1,9 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
+from datetime import timedelta
+import uuid
 
 
 class UserManager(BaseUserManager):
@@ -95,3 +98,78 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
+
+class MagicLink(models.Model):
+    """
+    Model for passwordless authentication via magic links.
+    Links expire after 15 minutes and can only be used once.
+    """
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='magic_links',
+        verbose_name=_('user')
+    )
+
+    token = models.UUIDField(
+        _('token'),
+        default=uuid.uuid4,
+        unique=True,
+        editable=False
+    )
+
+    expires_at = models.DateTimeField(
+        _('expires at'),
+        help_text=_('Magic link expiration time (15 minutes from creation)')
+    )
+
+    is_used = models.BooleanField(
+        _('is used'),
+        default=False,
+        help_text=_('Whether this magic link has been used')
+    )
+
+    created_at = models.DateTimeField(
+        _('created at'),
+        auto_now_add=True
+    )
+
+    class Meta:
+        verbose_name = _('magic link')
+        verbose_name_plural = _('magic links')
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['token']),
+            models.Index(fields=['user', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"Magic Link for {self.user.email} (expires: {self.expires_at})"
+
+    def save(self, *args, **kwargs):
+        """
+        Override save to set expiration time to 15 minutes from now if not set.
+        """
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(minutes=15)
+        super().save(*args, **kwargs)
+
+    def is_expired(self):
+        """
+        Check if the magic link has expired.
+
+        Returns:
+            bool: True if expired, False otherwise
+        """
+        return timezone.now() > self.expires_at
+
+    def is_valid(self):
+        """
+        Check if the magic link is valid (not expired and not used).
+
+        Returns:
+            bool: True if valid, False otherwise
+        """
+        return not self.is_expired() and not self.is_used

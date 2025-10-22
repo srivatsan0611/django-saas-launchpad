@@ -14,6 +14,8 @@ from .serializers import (
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
     EmailVerificationSerializer,
+    RequestMagicLinkSerializer,
+    VerifyMagicLinkSerializer,
 )
 
 
@@ -253,3 +255,52 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         """Return the authenticated user."""
         return self.request.user
+
+
+class RequestMagicLinkView(APIView):
+    """
+    POST /api/auth/magic-link/
+
+    Request magic link endpoint.
+    Sends a passwordless authentication link to user's email.
+    Magic link expires in 15 minutes.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = RequestMagicLinkSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(
+            {'message': 'If an account with that email exists, a magic link has been sent.'},
+            status=status.HTTP_200_OK
+        )
+
+
+class VerifyMagicLinkView(APIView):
+    """
+    POST /api/auth/magic-link/verify/
+
+    Verify magic link endpoint.
+    Validates the magic link token and returns JWT access and refresh tokens.
+    Marks the magic link as used after successful verification.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = VerifyMagicLinkSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            'message': 'Magic link verified successfully.',
+            'user': UserSerializer(user).data,
+            'tokens': {
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+            }
+        }, status=status.HTTP_200_OK)

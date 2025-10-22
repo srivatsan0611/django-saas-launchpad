@@ -14,6 +14,8 @@ from .views import (
     PasswordResetConfirmView,
     CustomTokenRefreshView,
     UserProfileView,
+    RequestMagicLinkView,
+    VerifyMagicLinkView,
 )
 
 app_name = 'accounts'
@@ -34,6 +36,10 @@ urlpatterns = [
     # Password Reset
     path('password-reset/', PasswordResetRequestView.as_view(), name='password_reset_request'),
     path('password-reset/confirm/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+
+    # Magic Link (Passwordless Authentication)
+    path('magic-link/', RequestMagicLinkView.as_view(), name='request_magic_link'),
+    path('magic-link/verify/', VerifyMagicLinkView.as_view(), name='verify_magic_link'),
 
     # User Profile
     path('me/', UserProfileView.as_view(), name='user_profile'),
