@@ -14,6 +14,11 @@ from .serializers import (
     InvitationSerializer,
     CreateInvitationSerializer
 )
+from .permissions import (
+    IsOrganizationOwner,
+    IsOrganizationAdminOrOwner,
+    IsOrganizationMember
+)
 
 
 class OrganizationViewSet(viewsets.ModelViewSet):
@@ -26,7 +31,19 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     update: Updates an organization (only owner can update)
     destroy: Deletes an organization (only owner can delete)
     """
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        """
+        Apply different permissions based on the action.
+        - list, create: Authenticated users only
+        - retrieve: Organization members only
+        - update, partial_update, destroy: Organization owners only
+        """
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return [IsAuthenticated(), IsOrganizationOwner()]
+        elif self.action == 'retrieve':
+            return [IsAuthenticated(), IsOrganizationMember()]
+        return [IsAuthenticated()]
 
     def get_queryset(self):
         """Return only organizations where the user is a member"""
@@ -55,49 +72,6 @@ class OrganizationViewSet(viewsets.ModelViewSet):
             role='owner'
         )
 
-    def check_owner_permission(self, organization):
-        """Check if current user is the owner of the organization"""
-        try:
-            membership = Membership.objects.get(
-                user=self.request.user,
-                organization=organization
-            )
-            if not membership.is_owner():
-                return False
-            return True
-        except Membership.DoesNotExist:
-            return False
-
-    def update(self, request, *args, **kwargs):
-        """Only owner can update organization"""
-        organization = self.get_object()
-        if not self.check_owner_permission(organization):
-            return Response(
-                {'detail': 'Only the organization owner can update it.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        return super().update(request, *args, **kwargs)
-
-    def partial_update(self, request, *args, **kwargs):
-        """Only owner can partially update organization"""
-        organization = self.get_object()
-        if not self.check_owner_permission(organization):
-            return Response(
-                {'detail': 'Only the organization owner can update it.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        return super().partial_update(request, *args, **kwargs)
-
-    def destroy(self, request, *args, **kwargs):
-        """Only owner can delete organization"""
-        organization = self.get_object()
-        if not self.check_owner_permission(organization):
-            return Response(
-                {'detail': 'Only the organization owner can delete it.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        return super().destroy(request, *args, **kwargs)
-
 
 class MembershipViewSet(viewsets.ModelViewSet):
     """
@@ -107,8 +81,22 @@ class MembershipViewSet(viewsets.ModelViewSet):
     destroy: Removes a member from the organization (admin/owner only)
     change_role: Changes a member's role (owner only)
     """
-    permission_classes = [IsAuthenticated]
     serializer_class = MembershipSerializer
+
+    def get_permissions(self):
+        """
+        Apply different permissions based on the action.
+        - list: Organization members can view members
+        - destroy: Only admins and owners can remove members
+        - change_role: Only owners can change roles
+        """
+        if self.action == 'list':
+            return [IsAuthenticated(), IsOrganizationMember()]
+        elif self.action == 'destroy':
+            return [IsAuthenticated(), IsOrganizationAdminOrOwner()]
+        elif self.action == 'change_role':
+            return [IsAuthenticated(), IsOrganizationOwner()]
+        return [IsAuthenticated()]
 
     def get_queryset(self):
         """Return memberships for the specified organization"""
@@ -119,62 +107,12 @@ class MembershipViewSet(viewsets.ModelViewSet):
             ).select_related('user', 'organization').order_by('-joined_at')
         return Membership.objects.none()
 
-    def check_admin_permission(self, organization):
-        """Check if current user is admin or owner"""
-        try:
-            membership = Membership.objects.get(
-                user=self.request.user,
-                organization=organization
-            )
-            return membership.is_admin_or_owner()
-        except Membership.DoesNotExist:
-            return False
-
-    def check_owner_permission(self, organization):
-        """Check if current user is the owner"""
-        try:
-            membership = Membership.objects.get(
-                user=self.request.user,
-                organization=organization
-            )
-            return membership.is_owner()
-        except Membership.DoesNotExist:
-            return False
-
-    def list(self, request, *args, **kwargs):
-        """List members - must be a member to view"""
-        organization_id = self.kwargs.get('organization_pk')
-        organization = get_object_or_404(Organization, id=organization_id)
-
-        # Check if user is a member
-        is_member = Membership.objects.filter(
-            user=request.user,
-            organization=organization
-        ).exists()
-
-        if not is_member:
-            return Response(
-                {'detail': 'You must be a member to view this organization.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        return super().list(request, *args, **kwargs)
-
     def destroy(self, request, *args, **kwargs):
         """
         Remove a member from the organization.
-        Admin/Owner can remove members, but owner cannot be removed.
+        Permissions are checked by IsOrganizationAdminOrOwner.
+        Additional business logic: owner cannot be removed.
         """
-        organization_id = self.kwargs.get('organization_pk')
-        organization = get_object_or_404(Organization, id=organization_id)
-
-        # Check if user has admin/owner permission
-        if not self.check_admin_permission(organization):
-            return Response(
-                {'detail': 'Only admins and owners can remove members.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
         membership = self.get_object()
 
         # Cannot remove the owner
@@ -194,20 +132,12 @@ class MembershipViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
     @action(detail=True, methods=['post'])
-    def change_role(self, request, organization_pk=None, **kwargs):
+    def change_role(self, request, organization_pk=None, pk=None):
         """
         Change a member's role.
-        Only owner can change roles, and cannot change their own role.
+        Permissions are checked by IsOrganizationOwner.
+        Additional business logic: cannot change owner's role.
         """
-        organization = get_object_or_404(Organization, id=organization_pk)
-
-        # Check if user is owner
-        if not self.check_owner_permission(organization):
-            return Response(
-                {'detail': 'Only the organization owner can change roles.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
         membership = self.get_object()
 
         # Cannot change owner's role
@@ -242,7 +172,16 @@ class InvitationViewSet(viewsets.ModelViewSet):
     accept: Accepts an invitation (the invited user)
     my_invitations: Lists current user's pending invitations
     """
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        """
+        Apply different permissions based on the action.
+        - list, create, destroy: Only admins and owners
+        - accept_invitation, my_invitations: Any authenticated user
+        """
+        if self.action in ['list', 'create', 'destroy']:
+            return [IsAuthenticated(), IsOrganizationAdminOrOwner()]
+        return [IsAuthenticated()]
 
     def get_queryset(self):
         """Return invitations for the specified organization"""
@@ -259,40 +198,12 @@ class InvitationViewSet(viewsets.ModelViewSet):
             return CreateInvitationSerializer
         return InvitationSerializer
 
-    def check_admin_permission(self, organization):
-        """Check if current user is admin or owner"""
-        try:
-            membership = Membership.objects.get(
-                user=self.request.user,
-                organization=organization
-            )
-            return membership.is_admin_or_owner()
-        except Membership.DoesNotExist:
-            return False
-
-    def list(self, request, *args, **kwargs):
-        """List invitations - admin/owner only"""
+    def create(self, request, *args, **kwargs):
+        """
+        Create invitation.
+        Permissions are checked by IsOrganizationAdminOrOwner.
+        """
         organization_id = self.kwargs.get('organization_pk')
-        organization = get_object_or_404(Organization, id=organization_id)
-
-        if not self.check_admin_permission(organization):
-            return Response(
-                {'detail': 'Only admins and owners can view invitations.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        return super().list(request, *args, **kwargs)
-
-    def create(self, request, **kwargs):
-        """Create invitation - admin/owner only"""
-        organization_id = self.kwargs.get('organization_pk')
-        organization = get_object_or_404(Organization, id=organization_id)
-
-        if not self.check_admin_permission(organization):
-            return Response(
-                {'detail': 'Only admins and owners can send invitations.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
 
         # Add organization_id to request data
         data = request.data.copy()
@@ -309,21 +220,8 @@ class InvitationViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED
         )
 
-    def destroy(self, request, *args, **kwargs):
-        """Cancel invitation - admin/owner only"""
-        organization_id = self.kwargs.get('organization_pk')
-        organization = get_object_or_404(Organization, id=organization_id)
-
-        if not self.check_admin_permission(organization):
-            return Response(
-                {'detail': 'Only admins and owners can cancel invitations.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        return super().destroy(request, *args, **kwargs)
-
     @action(detail=False, methods=['post'], url_path='accept')
-    def accept_invitation(self, request, **kwargs):
+    def accept_invitation(self, request, *args, **kwargs):
         """
         Accept an invitation using a token.
         Any authenticated user can accept if they have the token.
@@ -394,7 +292,7 @@ class InvitationViewSet(viewsets.ModelViewSet):
         )
 
     @action(detail=False, methods=['get'], url_path='my-invitations')
-    def my_invitations(self, request, **kwargs):
+    def my_invitations(self, request, *args, **kwargs):
         """
         List current user's pending invitations across all organizations.
         """
