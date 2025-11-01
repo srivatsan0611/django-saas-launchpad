@@ -1,0 +1,22 @@
+You're invited to join {{ organization.name }}!
+
+Hi,
+
+{{ invited_by.first_name|default:invited_by.email }} has invited you to join {{ organization.name }} on {{ site_name }}.
+
+You've been invited as a {{ invitation.get_role_display }}.
+
+To accept this invitation and join the organization, click the link below:
+
+{{ accept_url }}
+
+This invitation will expire in {{ expiry_days }} days.
+
+If you don't want to join this organization or believe this invitation was sent in error, you can safely ignore this email.
+
+Best regards,
+The {{ site_name }} Team
+
+---
+If the button above doesn't work, copy and paste this URL into your browser:
+{{ accept_url }}

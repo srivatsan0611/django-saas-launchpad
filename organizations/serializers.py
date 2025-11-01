@@ -200,7 +200,7 @@ class CreateInvitationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """
         Create invitation with current user as inviter.
-        Sets expiry to 7 days from now.
+        Sets expiry to 7 days from now and triggers invitation email.
         """
         request = self.context.get('request')
         if not request or not request.user:
@@ -217,6 +217,10 @@ class CreateInvitationSerializer(serializers.ModelSerializer):
             role=validated_data.get('role', 'member'),
             expires_at=timezone.now() + timedelta(days=7)
         )
+
+        # Trigger async email task
+        from organizations.tasks import send_invitation_email
+        send_invitation_email.delay(str(invitation.id))
 
         return invitation
 
