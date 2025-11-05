@@ -1,12 +1,33 @@
 import uuid
 from django.conf import settings
 from django.db import models
+from organizations.models import Organization
 
 
 class Event(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey("organizations.Organization", on_delete=models.CASCADE, db_index=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    """
+    Represents a user event in the analytics system.
+    """
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the event"
+    )
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name='events',
+        help_text="Organization this event belongs to"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='events',
+        help_text="User who triggered this event (optional)"
+    )
     name = models.CharField(max_length=200, db_index=True)
     properties = models.JSONField(default=dict, blank=True)   
     timestamp = models.DateTimeField(db_index=True)
@@ -22,7 +43,16 @@ class Event(models.Model):
         ordering = ["-timestamp"]
 
 class DailyMetric(models.Model):
-    organization = models.ForeignKey("organizations.Organization", on_delete=models.CASCADE)
+    """
+    Tracks daily usage metrics for an organization.
+    Includes DAU (Daily Active Users), new users, and revenue data.
+    """
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name='daily_metrics',
+        help_text="Organization this metric belongs to"
+    )
     date = models.DateField(db_index=True)
     dau = models.IntegerField(default=0)
     new_users = models.IntegerField(default=0)
@@ -33,7 +63,17 @@ class DailyMetric(models.Model):
         indexes = [models.Index(fields=["organization", "date"])]
 
 class MonthlyMetric(models.Model):
-    organization = models.ForeignKey("organizations.Organization", on_delete=models.CASCADE)
+    """
+    Tracks monthly usage metrics for an organization.
+    Includes MAU (Monthly Active Users), MRR (Monthly Recurring Revenue), and churn rate.
+    """
+    
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name='monthly_metrics',
+        help_text="Organization this metric belongs to"
+    )
     year = models.IntegerField()
     month = models.IntegerField()
     mau = models.IntegerField(default=0)
