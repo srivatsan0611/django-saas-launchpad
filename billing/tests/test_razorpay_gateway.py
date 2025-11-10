@@ -592,3 +592,35 @@ class TestErrorHandling:
         assert response.success is False
         assert response.error_message == 'Payment failed'
         assert response.error_code == 'PAYMENT_ERROR'
+
+    def test_gateway_response_with_status_code(self):
+        """Test GatewayResponse includes HTTP status codes"""
+        # Success response
+        success_response = GatewayResponse(
+            success=True,
+            data={'customer_id': 'cust_123'},
+            status_code=200
+        )
+
+        assert success_response.success is True
+        assert success_response.status_code == 200
+
+        # Created response
+        created_response = GatewayResponse(
+            success=True,
+            data={'subscription_id': 'sub_123'},
+            status_code=201
+        )
+
+        assert created_response.status_code == 201
+
+        # Error response
+        error_response = GatewayResponse(
+            success=False,
+            data={},
+            status_code=400,
+            error_message='Bad request'
+        )
+
+        assert error_response.status_code == 400
+        assert error_response.success is False
