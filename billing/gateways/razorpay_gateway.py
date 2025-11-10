@@ -8,9 +8,12 @@ handling customer management, subscriptions, and webhooks.
 import razorpay
 import hmac
 import hashlib
+import logging
 from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
 from .base import BasePaymentGateway, GatewayResponse, GatewayException
+
+logger = logging.getLogger(__name__)
 
 
 class RazorpayGateway(BasePaymentGateway):
@@ -62,16 +65,26 @@ class RazorpayGateway(BasePaymentGateway):
                     'name': customer.get('name'),
                     'created_at': customer.get('created_at')
                 },
+                status_code=200,
                 gateway_response=customer
             )
 
         except razorpay.errors.BadRequestError as e:
+            logger.warning(
+                "Failed to create Razorpay customer",
+                extra={'email': email, 'error': str(e)}
+            )
             raise GatewayException(
                 message=f"Failed to create customer: {str(e)}",
                 error_code='customer_creation_failed',
                 gateway_response=e.args[0] if e.args else None
             )
         except Exception as e:
+            logger.error(
+                "Unexpected error creating Razorpay customer",
+                extra={'email': email, 'error': str(e)},
+                exc_info=True
+            )
             raise GatewayException(
                 message=f"Unexpected error creating customer: {str(e)}",
                 error_code='unexpected_error'
@@ -92,10 +105,15 @@ class RazorpayGateway(BasePaymentGateway):
                     'name': customer.get('name'),
                     'created_at': customer.get('created_at')
                 },
+                status_code=200,
                 gateway_response=customer
             )
 
         except razorpay.errors.BadRequestError as e:
+            logger.warning(
+                "Razorpay customer not found",
+                extra={'customer_id': customer_id, 'error': str(e)}
+            )
             raise GatewayException(
                 message=f"Customer not found: {str(e)}",
                 error_code='customer_not_found',
@@ -148,10 +166,15 @@ class RazorpayGateway(BasePaymentGateway):
                     'start_at': subscription.get('start_at'),
                     'end_at': subscription.get('end_at')
                 },
+                status_code=201,
                 gateway_response=subscription
             )
 
         except razorpay.errors.BadRequestError as e:
+            logger.warning(
+                "Failed to create Razorpay subscription",
+                extra={'customer_id': customer_id, 'plan_id': plan_id, 'error': str(e)}
+            )
             raise GatewayException(
                 message=f"Failed to create subscription: {str(e)}",
                 error_code='subscription_creation_failed',
@@ -186,10 +209,15 @@ class RazorpayGateway(BasePaymentGateway):
                     'ended_at': subscription.get('ended_at'),
                     'cancelled_at': subscription.get('cancelled_at')
                 },
+                status_code=200,
                 gateway_response=subscription
             )
 
         except razorpay.errors.BadRequestError as e:
+            logger.warning(
+                "Failed to cancel Razorpay subscription",
+                extra={'subscription_id': subscription_id, 'error': str(e)}
+            )
             raise GatewayException(
                 message=f"Failed to cancel subscription: {str(e)}",
                 error_code='subscription_cancellation_failed',
@@ -215,6 +243,7 @@ class RazorpayGateway(BasePaymentGateway):
                     'ended_at': subscription.get('ended_at'),
                     'cancelled_at': subscription.get('cancelled_at')
                 },
+                status_code=200,
                 gateway_response=subscription
             )
 
@@ -242,7 +271,8 @@ class RazorpayGateway(BasePaymentGateway):
                 'product_id': name.lower().replace(' ', '_'),
                 'name': name,
                 'description': description
-            }
+            },
+            status_code=200
         )
 
     def create_price(
@@ -291,6 +321,7 @@ class RazorpayGateway(BasePaymentGateway):
                     'amount': plan['item']['amount'],
                     'currency': plan['item']['currency']
                 },
+                status_code=201,
                 gateway_response=plan
             )
 
@@ -338,6 +369,7 @@ class RazorpayGateway(BasePaymentGateway):
                     'subscription_id': subscription_id,
                     'session_id': subscription_id  # Use subscription_id as session_id
                 },
+                status_code=201,
                 gateway_response=subscription_response.gateway_response
             )
 
@@ -368,6 +400,7 @@ class RazorpayGateway(BasePaymentGateway):
                     'created_at': invoice.get('created_at'),
                     'paid_at': invoice.get('paid_at')
                 },
+                status_code=200,
                 gateway_response=invoice
             )
 
@@ -403,6 +436,11 @@ class RazorpayGateway(BasePaymentGateway):
             return hmac.compare_digest(expected_signature, signature)
 
         except Exception as e:
+            logger.error(
+                "Failed to verify Razorpay webhook signature",
+                extra={'error': str(e)},
+                exc_info=True
+            )
             raise GatewayException(
                 message=f"Failed to verify webhook signature: {str(e)}",
                 error_code='webhook_verification_failed'

@@ -18,9 +18,18 @@ class GatewayResponse:
 
     All gateway methods return this response format to ensure consistency
     across different payment providers.
+
+    Attributes:
+        success: Whether the operation succeeded
+        data: Response data from the gateway
+        status_code: HTTP status code or custom status (200=success, 400=bad request, etc.)
+        error_message: Human-readable error message if operation failed
+        error_code: Machine-readable error code for programmatic handling
+        gateway_response: Raw gateway response for debugging and logging
     """
     success: bool
     data: Dict[str, Any]
+    status_code: Optional[int] = None
     error_message: Optional[str] = None
     error_code: Optional[str] = None
     gateway_response: Optional[Dict[str, Any]] = None  # Raw gateway response for debugging
