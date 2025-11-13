@@ -23,4 +23,5 @@ urlpatterns = [
     # API endpoints
     path("api/auth/", include('accounts.urls')),
     path("api/", include('organizations.urls')),
+    path('api/analytics/', include(('analytics.urls'))),
 ]
