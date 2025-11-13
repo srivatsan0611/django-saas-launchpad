@@ -7,6 +7,7 @@ from organizations.models import Organization
 class Event(models.Model):
     """
     Represents a user event in the analytics system.
+    Includes organization, user, name, properties, timestamp, received_at, ip_address, and user_agent.
     """
     id = models.UUIDField(
         primary_key=True,
@@ -42,10 +43,14 @@ class Event(models.Model):
         ]
         ordering = ["-timestamp"]
 
+    def __str__(self):
+        return f"{self.organization.name} - {self.name} - {self.timestamp}"
+
+
 class DailyMetric(models.Model):
     """
     Tracks daily usage metrics for an organization.
-    Includes DAU (Daily Active Users), new users, and revenue data.
+    Includes organization, date, DAU, new users, and revenue data.
     """
     organization = models.ForeignKey(
         Organization,
@@ -62,10 +67,13 @@ class DailyMetric(models.Model):
         unique_together = ("organization", "date")
         indexes = [models.Index(fields=["organization", "date"])]
 
+    def __str__(self):
+        return f"{self.organization.name} - {self.date}"
+
 class MonthlyMetric(models.Model):
     """
     Tracks monthly usage metrics for an organization.
-    Includes MAU (Monthly Active Users), MRR (Monthly Recurring Revenue), and churn rate.
+    Includes organization, year, month, MAU, MRR, and churn rate.
     """
     
     organization = models.ForeignKey(
@@ -83,3 +91,37 @@ class MonthlyMetric(models.Model):
     class Meta:
         unique_together = ("organization", "year", "month")
         indexes = [models.Index(fields=["organization", "year", "month"])]
+
+    def __str__(self):
+        return f"{self.organization.name} - {self.year}-{self.month:02d}"
+
+class FeatureMetric(models.Model):
+    """
+    Tracks usage analytics for individual feature flags within an organization.
+    Useful for identifying top or underused features.
+    Includes organization, feature_name, date, usage_count, unique_users, and last_used_at.
+    """
+
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="feature_metrics",
+        help_text="Organization this metric belongs to"
+    )
+
+    feature_name = models.CharField(max_length=255, db_index=True)
+    date = models.DateField(db_index=True)
+
+    # Metrics
+    usage_count = models.IntegerField(default=0, help_text="Number of times the feature was used")
+    unique_users = models.IntegerField(default=0, help_text="Distinct users who used the feature")
+    last_used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ("organization", "feature_name", "date")
+        indexes = [
+            models.Index(fields=["organization", "feature_name", "date"]),
+        ]
+
+    def __str__(self):
+        return f"{self.organization.name} - {self.feature_name} ({self.date}) - {self.usage_count} uses"
