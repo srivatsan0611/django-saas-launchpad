@@ -225,7 +225,7 @@ class TestMembershipViewSet:
         response = api_client.get(f'/api/organizations/{organization.id}/members/')
 
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == 2  # owner + member
+        assert response.data['count'] == 2  # owner + member
 
     def test_list_members_as_non_member(self, api_client, outsider_user, organization):
         """Test that non-members can't list members"""
@@ -409,7 +409,7 @@ class TestInvitationViewSet:
         response = api_client.get(f'/api/organizations/{organization.id}/invitations/')
 
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == 2
+        assert response.data['count'] == 2
 
     def test_accept_invitation(self, api_client, owner_user, outsider_user, organization):
         """Test accepting an invitation"""
