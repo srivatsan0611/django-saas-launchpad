@@ -60,17 +60,9 @@ class OrganizationViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """
-        Create organization and automatically create owner membership.
-        The serializer already sets the owner, but we need to create the membership.
+        Create organization. Owner membership is auto-created by signal.
         """
-        organization = serializer.save()
-
-        # Create owner membership
-        Membership.objects.create(
-            user=self.request.user,
-            organization=organization,
-            role='owner'
-        )
+        serializer.save()
 
 
 class MembershipViewSet(viewsets.ModelViewSet):
