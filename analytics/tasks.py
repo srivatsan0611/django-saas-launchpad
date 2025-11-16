@@ -1,7 +1,16 @@
-# analytics/tasks.py
+"""
+Analytics tasks module.
+
+This module contains Celery tasks for aggregating analytics metrics:
+- Daily metrics (DAU, new users, revenue)
+- Monthly metrics (MAU, MRR, churn rate)
+- Feature usage metrics
+"""
+
+
 import datetime
 from celery import shared_task
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Min
 from django.utils import timezone
 from organizations.models import Organization
 from .models import Event, DailyMetric, MonthlyMetric, FeatureMetric
@@ -29,7 +38,7 @@ def aggregate_daily_metrics(self):
                     organization=org,
                     timestamp__date=yesterday
                 ).values("user").distinct().count()
-            )            
+            )
             new_users = (
                 Event.objects.filter(
                     organization=org,
@@ -65,7 +74,7 @@ def aggregate_daily_metrics(self):
 
     except Exception as exc:
         # Retry the task if it fails
-        raise self.retry(exc=exc)   
+        raise self.retry(exc=exc)
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
@@ -117,7 +126,7 @@ def aggregate_monthly_metrics(self):
                 },
             )
 
-            return {
+        return {
                 'status': 'success',
                 'message': f'Monthly metrics aggregation completed for {year}-{month:02d}.'
             }
