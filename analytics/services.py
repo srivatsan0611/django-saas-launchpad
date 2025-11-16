@@ -2,7 +2,7 @@
 Analytics service functions for tracking events and retrieving metrics.
 """
 from datetime import datetime, timedelta
-from django.db.models import Count,Sum, Q, F
+from django.db.models import Count,Sum
 from django.utils import timezone
 from .models import Event, DailyMetric, MonthlyMetric, FeatureMetric
 from django.db.models.functions import TruncDate
@@ -56,8 +56,8 @@ def get_dau(org, start_date, end_date):
     if isinstance(end_date, datetime):
         end_date = end_date.date()
     
-    results = []
-    dau = (
+    # Get actual DAU data from events
+    dau_data = (
         Event.objects.filter(
             organization=org,
             timestamp__date__gte=start_date,
@@ -70,11 +70,18 @@ def get_dau(org, start_date, end_date):
         .order_by("date")
     )
     
-    for item in dau:
+    # Create a dictionary for quick lookup
+    dau_dict = {item['date']: item['dau'] for item in dau_data}
+    
+    # Generate results for all dates in range, filling in 0 for missing dates
+    results = []
+    current_date = start_date
+    while current_date <= end_date:
         results.append({
-            'date': item['date'],
-            'dau': item['dau']
+            'date': current_date,
+            'dau': dau_dict.get(current_date, 0)
         })
+        current_date += timedelta(days=1)
     
     return results
 
