@@ -18,6 +18,12 @@ class EventSerializer(serializers.ModelSerializer):
             'properties',
         ]
         read_only_fields = ['id', 'timestamp']
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["organization"] = str(instance.organization_id)
+        data["user"] = str(instance.user_id) if instance.user_id else None
+        return data
 
 
 class TrackEventSerializer(serializers.ModelSerializer):
@@ -55,6 +61,10 @@ class DailyMetricSerializer(serializers.ModelSerializer):
             'revenue_cents',
         ]
         read_only_fields = fields
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["organization"] = str(instance.organization_id)
+        return data
 
 class MonthlyMetricSerializer(serializers.ModelSerializer):
     """
@@ -72,6 +82,10 @@ class MonthlyMetricSerializer(serializers.ModelSerializer):
             'churn_rate',
         ]
         read_only_fields = fields
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["organization"] = str(instance.organization_id)
+        return data
 
 
 class FeatureMetricSerializer(serializers.ModelSerializer):
@@ -89,4 +103,8 @@ class FeatureMetricSerializer(serializers.ModelSerializer):
             'unique_users',
             'last_used_at',
         ]
-        read_only_fields = fields
+        read_only_fields = fields  
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["organization"] = str(instance.organization_id)
+        return data 
