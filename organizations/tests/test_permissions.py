@@ -40,7 +40,7 @@ class TestIsOrganizationOwner:
             name='Test Org',
             owner=owner
         )
-        Membership.objects.create(user=owner, organization=org, role='owner')
+        # Owner membership is auto-created by signal
 
         factory = APIRequestFactory()
         request = factory.get('/fake-url/')
@@ -49,7 +49,7 @@ class TestIsOrganizationOwner:
         permission = IsOrganizationOwner()
         view = MockView(org)
 
-        assert permission.has_permission(request, view)
+        assert permission.has_object_permission(request, view, org)
 
     def test_admin_no_permission(self):
         """Test that admin does not have owner permission"""
@@ -65,7 +65,7 @@ class TestIsOrganizationOwner:
             name='Test Org',
             owner=owner
         )
-        Membership.objects.create(user=owner, organization=org, role='owner')
+        # Owner membership is auto-created by signal
         Membership.objects.create(user=admin, organization=org, role='admin')
 
         factory = APIRequestFactory()
@@ -75,7 +75,7 @@ class TestIsOrganizationOwner:
         permission = IsOrganizationOwner()
         view = MockView(org)
 
-        assert not permission.has_permission(request, view)
+        assert not permission.has_object_permission(request, view, org)
 
     def test_member_no_permission(self):
         """Test that member does not have owner permission"""
@@ -91,7 +91,7 @@ class TestIsOrganizationOwner:
             name='Test Org',
             owner=owner
         )
-        Membership.objects.create(user=owner, organization=org, role='owner')
+        # Owner membership is auto-created by signal
         Membership.objects.create(user=member, organization=org, role='member')
 
         factory = APIRequestFactory()
@@ -101,7 +101,7 @@ class TestIsOrganizationOwner:
         permission = IsOrganizationOwner()
         view = MockView(org)
 
-        assert not permission.has_permission(request, view)
+        assert not permission.has_object_permission(request, view, org)
 
     def test_non_member_no_permission(self):
         """Test that non-member does not have permission"""
@@ -117,7 +117,6 @@ class TestIsOrganizationOwner:
             name='Test Org',
             owner=owner
         )
-        Membership.objects.create(user=owner, organization=org, role='owner')
 
         factory = APIRequestFactory()
         request = factory.get('/fake-url/')
@@ -126,7 +125,7 @@ class TestIsOrganizationOwner:
         permission = IsOrganizationOwner()
         view = MockView(org)
 
-        assert not permission.has_permission(request, view)
+        assert not permission.has_object_permission(request, view, org)
 
     def test_anonymous_user_no_permission(self):
         """Test that anonymous user does not have permission"""
@@ -138,7 +137,6 @@ class TestIsOrganizationOwner:
             name='Test Org',
             owner=owner
         )
-        Membership.objects.create(user=owner, organization=org, role='owner')
 
         factory = APIRequestFactory()
         request = factory.get('/fake-url/')
@@ -147,7 +145,7 @@ class TestIsOrganizationOwner:
         permission = IsOrganizationOwner()
         view = MockView(org)
 
-        assert not permission.has_permission(request, view)
+        assert not permission.has_object_permission(request, view, org)
 
 
 @pytest.mark.django_db
@@ -164,7 +162,6 @@ class TestIsOrganizationAdminOrOwner:
             name='Test Org',
             owner=owner
         )
-        Membership.objects.create(user=owner, organization=org, role='owner')
 
         factory = APIRequestFactory()
         request = factory.get('/fake-url/')
@@ -173,7 +170,7 @@ class TestIsOrganizationAdminOrOwner:
         permission = IsOrganizationAdminOrOwner()
         view = MockView(org)
 
-        assert permission.has_permission(request, view)
+        assert permission.has_object_permission(request, view, org)
 
     def test_admin_has_permission(self):
         """Test that admin has permission"""
@@ -189,7 +186,6 @@ class TestIsOrganizationAdminOrOwner:
             name='Test Org',
             owner=owner
         )
-        Membership.objects.create(user=owner, organization=org, role='owner')
         Membership.objects.create(user=admin, organization=org, role='admin')
 
         factory = APIRequestFactory()
@@ -199,7 +195,7 @@ class TestIsOrganizationAdminOrOwner:
         permission = IsOrganizationAdminOrOwner()
         view = MockView(org)
 
-        assert permission.has_permission(request, view)
+        assert permission.has_object_permission(request, view, org)
 
     def test_member_no_permission(self):
         """Test that regular member does not have permission"""
@@ -215,7 +211,6 @@ class TestIsOrganizationAdminOrOwner:
             name='Test Org',
             owner=owner
         )
-        Membership.objects.create(user=owner, organization=org, role='owner')
         Membership.objects.create(user=member, organization=org, role='member')
 
         factory = APIRequestFactory()
@@ -225,7 +220,7 @@ class TestIsOrganizationAdminOrOwner:
         permission = IsOrganizationAdminOrOwner()
         view = MockView(org)
 
-        assert not permission.has_permission(request, view)
+        assert not permission.has_object_permission(request, view, org)
 
     def test_non_member_no_permission(self):
         """Test that non-member does not have permission"""
@@ -241,7 +236,6 @@ class TestIsOrganizationAdminOrOwner:
             name='Test Org',
             owner=owner
         )
-        Membership.objects.create(user=owner, organization=org, role='owner')
 
         factory = APIRequestFactory()
         request = factory.get('/fake-url/')
@@ -250,7 +244,7 @@ class TestIsOrganizationAdminOrOwner:
         permission = IsOrganizationAdminOrOwner()
         view = MockView(org)
 
-        assert not permission.has_permission(request, view)
+        assert not permission.has_object_permission(request, view, org)
 
 
 @pytest.mark.django_db
@@ -267,7 +261,6 @@ class TestIsOrganizationMember:
             name='Test Org',
             owner=owner
         )
-        Membership.objects.create(user=owner, organization=org, role='owner')
 
         factory = APIRequestFactory()
         request = factory.get('/fake-url/')
@@ -276,7 +269,7 @@ class TestIsOrganizationMember:
         permission = IsOrganizationMember()
         view = MockView(org)
 
-        assert permission.has_permission(request, view)
+        assert permission.has_object_permission(request, view, org)
 
     def test_admin_has_permission(self):
         """Test that admin has permission"""
@@ -292,7 +285,6 @@ class TestIsOrganizationMember:
             name='Test Org',
             owner=owner
         )
-        Membership.objects.create(user=owner, organization=org, role='owner')
         Membership.objects.create(user=admin, organization=org, role='admin')
 
         factory = APIRequestFactory()
@@ -302,7 +294,7 @@ class TestIsOrganizationMember:
         permission = IsOrganizationMember()
         view = MockView(org)
 
-        assert permission.has_permission(request, view)
+        assert permission.has_object_permission(request, view, org)
 
     def test_member_has_permission(self):
         """Test that regular member has permission"""
@@ -318,7 +310,6 @@ class TestIsOrganizationMember:
             name='Test Org',
             owner=owner
         )
-        Membership.objects.create(user=owner, organization=org, role='owner')
         Membership.objects.create(user=member, organization=org, role='member')
 
         factory = APIRequestFactory()
@@ -328,7 +319,7 @@ class TestIsOrganizationMember:
         permission = IsOrganizationMember()
         view = MockView(org)
 
-        assert permission.has_permission(request, view)
+        assert permission.has_object_permission(request, view, org)
 
     def test_non_member_no_permission(self):
         """Test that non-member does not have permission"""
@@ -344,7 +335,6 @@ class TestIsOrganizationMember:
             name='Test Org',
             owner=owner
         )
-        Membership.objects.create(user=owner, organization=org, role='owner')
 
         factory = APIRequestFactory()
         request = factory.get('/fake-url/')
@@ -353,7 +343,7 @@ class TestIsOrganizationMember:
         permission = IsOrganizationMember()
         view = MockView(org)
 
-        assert not permission.has_permission(request, view)
+        assert not permission.has_object_permission(request, view, org)
 
     def test_anonymous_user_no_permission(self):
         """Test that anonymous user does not have permission"""
@@ -365,7 +355,6 @@ class TestIsOrganizationMember:
             name='Test Org',
             owner=owner
         )
-        Membership.objects.create(user=owner, organization=org, role='owner')
 
         factory = APIRequestFactory()
         request = factory.get('/fake-url/')
@@ -374,4 +363,4 @@ class TestIsOrganizationMember:
         permission = IsOrganizationMember()
         view = MockView(org)
 
-        assert not permission.has_permission(request, view)
+        assert not permission.has_object_permission(request, view, org)

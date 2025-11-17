@@ -107,11 +107,7 @@ class TestOrganizationModel:
             owner=user
         )
 
-        # Initially no memberships
-        assert org.get_member_count() == 0
-
-        # Create memberships
-        Membership.objects.create(user=user, organization=org, role='owner')
+        # Owner membership is auto-created by signal
         assert org.get_member_count() == 1
 
         user2 = User.objects.create_user(
@@ -208,11 +204,10 @@ class TestMembershipModel:
             owner=owner
         )
 
-        # Test owner role
-        owner_membership = Membership.objects.create(
+        # Test owner role (auto-created by signal)
+        owner_membership = Membership.objects.get(
             user=owner,
-            organization=org,
-            role='owner'
+            organization=org
         )
         assert owner_membership.is_owner()
         assert owner_membership.is_admin_or_owner()

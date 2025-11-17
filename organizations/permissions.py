@@ -33,6 +33,9 @@ class IsOrganizationOwner(permissions.BasePermission):
         Check if the user is the owner of the organization.
         Handles both Organization objects and nested objects (Membership, Invitation).
         """
+        if not (request.user and request.user.is_authenticated):
+            return False
+
         # Determine the organization object
         from .models import Organization
 
@@ -93,6 +96,9 @@ class IsOrganizationAdminOrOwner(permissions.BasePermission):
         Check if the user is an admin or owner of the organization.
         Handles both Organization objects and nested objects.
         """
+        if not (request.user and request.user.is_authenticated):
+            return False
+
         # Determine the organization object
         from .models import Organization
 
@@ -146,6 +152,9 @@ class IsOrganizationMember(permissions.BasePermission):
         Check if the user is a member of the organization.
         Handles both Organization objects and nested objects.
         """
+        if not (request.user and request.user.is_authenticated):
+            return False
+
         # Determine the organization object
         from .models import Organization
 

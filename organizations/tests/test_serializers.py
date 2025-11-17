@@ -41,7 +41,6 @@ class TestOrganizationSerializer:
             name='Test Org',
             owner=owner
         )
-        Membership.objects.create(user=owner, organization=org, role='owner')
 
         serializer = OrganizationSerializer(org)
         data = serializer.data
@@ -64,8 +63,8 @@ class TestOrganizationSerializer:
             owner=owner
         )
 
-        serializer = OrganizationSerializer(org, data={'slug': 'new-slug'})
-        serializer.is_valid()
+        serializer = OrganizationSerializer(org, data={'name': 'Test Org', 'slug': 'new-slug'}, partial=True)
+        assert serializer.is_valid()
         serializer.save()
 
         org.refresh_from_db()
