@@ -4,7 +4,7 @@ Tests for accounts Celery tasks.
 Tests email sending tasks with mocked email functionality.
 """
 import pytest
-from unittest.mock import patch, Mock, call
+from unittest.mock import patch, Mock
 from django.core import mail
 
 from accounts.models import User, MagicLink

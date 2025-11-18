@@ -235,7 +235,7 @@ class TestVerifyEmailView:
     def test_verify_email_already_verified(self, api_client):
         """Test email verification for already verified email."""
         token = str(uuid.uuid4())
-        user = User.objects.create_user(
+        User.objects.create_user(
             email='test@example.com',
             password='testpass123',
             email_verification_token=token,
@@ -257,7 +257,7 @@ class TestResendVerificationView:
     @patch('accounts.tasks.send_verification_email.delay')
     def test_resend_verification_success(self, mock_email_task, api_client):
         """Test successful resend of verification email."""
-        user = User.objects.create_user(
+        User.objects.create_user(
             email='test@example.com',
             password='testpass123',
             email_verified=False

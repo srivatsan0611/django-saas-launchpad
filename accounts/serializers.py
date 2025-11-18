@@ -154,7 +154,7 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         Validate that a user with this email exists.
         """
         try:
-            user = User.objects.get(email=value)
+            User.objects.get(email=value)
         except User.DoesNotExist:
             # Don't reveal whether a user exists or not for security
             # But we still validate the email format
