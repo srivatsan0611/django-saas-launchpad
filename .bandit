@@ -1,0 +1,6 @@
+[bandit]
+# Bandit configuration for Django SaaS project
+exclude_dirs = /saas_env/,/venv/,/tests/,/*/tests/,/migrations/,/*/migrations/
+
+# Skip specific test IDs
+skips = B101,B601

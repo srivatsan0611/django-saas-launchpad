@@ -35,6 +35,14 @@ factory-boy==3.3.0
 ruff==0.2.2
 black==24.2.0
 
+# Security Scanning
+safety==3.7.0
+bandit==1.9.1
+semgrep==1.143.1
+radon==6.0.1
+pip-audit==2.9.0
+django-filter==25.2
+
 # Utils
 python-dateutil==2.8.2
 pytz==2024.1
