@@ -54,11 +54,9 @@ jobs:
 
       - name: Safety check for known vulnerabilities
         run: safety check --file requirements.txt --output text
-        continue-on-error: true
 
       - name: Pip-audit for dependency vulnerabilities
         run: pip-audit --requirement requirements.txt --format json --output pip-audit-report.json
-        continue-on-error: true
 
       - name: Upload pip-audit results
         uses: actions/upload-artifact@v4
@@ -88,13 +86,11 @@ jobs:
         run: |
           bandit -r . -f json -o bandit-report.json -ll -x './saas_env/*,./venv/*,./tests/*,./*/tests/*' || true
           bandit -r . -f txt -ll -x './saas_env/*,./venv/*,./tests/*,./*/tests/*'
-        continue-on-error: true
 
       - name: Semgrep security scan
         run: |
           semgrep --config=auto --json --output=semgrep-report.json . || true
           semgrep --config=auto .
-        continue-on-error: true
 
       - name: Upload Bandit results
         uses: actions/upload-artifact@v4

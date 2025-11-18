@@ -143,6 +143,29 @@ radon cc . -a --total-average
 
 **Config files:** `.gitleaks.toml`, `.bandit`, `.pylintrc`
 
+
+### PR Checks
+
+#### Blocking (PR Fails)
+
+Secret Detection
+- TruffleHog: Verified secrets
+- Gitleaks: Any secrets
+Dependency Vulnerabilities
+- Safety: ANY vulnerabilities
+- pip-audit: ANY vulnerabilities
+Code Security (SAST)
+- Bandit: Medium/High severity issues (-ll flag)
+- Semgrep: Any security findings
+
+#### Non Blocking (Reports)
+
+Code Quality
+- Ruff: Code style issues 
+- Black: Formatting issues 
+- Pylint: Code smells 
+- Radon: Complexity metrics 
+
 ---
 
 **Note:** This is an active development project. More features (subscriptions, invoices, feature flags, analytics) coming soon.
