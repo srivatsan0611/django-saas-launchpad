@@ -4,7 +4,7 @@ Analytics service functions for tracking events and retrieving metrics.
 from datetime import datetime, timedelta
 from django.db.models import Count,Sum
 from django.utils import timezone
-from .models import Event, DailyMetric, MonthlyMetric, FeatureMetric
+from .models import Event, DailyMetric, FeatureMetric
 from django.db.models.functions import TruncDate
 
 def track_event(org, user, event_name, properties=None, timestamp=None):

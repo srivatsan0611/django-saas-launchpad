@@ -10,8 +10,7 @@ All tests use mocked Razorpay API calls to ensure:
 import pytest
 import hmac
 import hashlib
-import json
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch
 from datetime import datetime, timedelta
 
 from billing.gateways.razorpay_gateway import RazorpayGateway
