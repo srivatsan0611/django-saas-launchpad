@@ -616,7 +616,6 @@ class TestDataIntegrity:
         )
 
         # Delete user
-        user_id = event_user.id
         event_user.delete()
 
         # Event should still exist but with NULL user

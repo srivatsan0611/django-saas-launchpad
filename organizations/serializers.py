@@ -207,7 +207,7 @@ class CreateInvitationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("User must be authenticated")
 
         # Remove organization_id from validated_data (we added organization object)
-        organization_id = validated_data.pop('organization_id', None)
+        validated_data.pop('organization_id', None)
         organization = validated_data.get('organization')
 
         invitation = Invitation.objects.create(
