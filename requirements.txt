@@ -1,6 +1,6 @@
 # Core Django
-Django==4.2.11
-djangorestframework==3.15.1
+Django==4.2.25
+djangorestframework==3.15.2
 django-cors-headers==4.3.1
 django-environ==0.11.2
 
@@ -9,7 +9,7 @@ psycopg2-binary==2.9.9
 dj-database-url==2.1.0
 
 # Auth
-djangorestframework-simplejwt==5.3.1
+djangorestframework-simplejwt==5.5.1
 PyJWT==2.8.0
 
 # Async & Background Jobs
@@ -22,7 +22,7 @@ stripe==8.2.0
 razorpay==1.4.1
 
 # Monitoring & Security
-sentry-sdk==1.40.5
+sentry-sdk==2.8.0
 python-decouple==3.8
 
 # Testing
@@ -33,7 +33,7 @@ factory-boy==3.3.0
 
 # Code Quality
 ruff==0.2.2
-black==24.2.0
+black==24.3.0
 
 # Security Scanning
 safety==3.7.0
@@ -41,7 +41,7 @@ bandit==1.9.1
 semgrep==1.143.1
 radon==6.0.1
 pip-audit==2.9.0
-django-filter==25.2
+django-filter==24.3
 
 # Utils
 python-dateutil==2.8.2
