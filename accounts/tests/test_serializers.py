@@ -9,7 +9,7 @@ import pytest
 import uuid
 from datetime import timedelta
 from django.utils import timezone
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 from accounts.models import User, MagicLink
 from accounts.serializers import (
@@ -353,7 +353,7 @@ class TestEmailVerificationSerializer:
     def test_email_verification_valid_token(self):
         """Test email verification with valid token."""
         token = str(uuid.uuid4())
-        user = User.objects.create_user(
+        User.objects.create_user(
             email='test@example.com',
             password='testpass123',
             email_verification_token=token,
@@ -382,7 +382,7 @@ class TestEmailVerificationSerializer:
     def test_email_verification_already_verified(self):
         """Test email verification for already verified email."""
         token = str(uuid.uuid4())
-        user = User.objects.create_user(
+        User.objects.create_user(
             email='test@example.com',
             password='testpass123',
             email_verification_token=token,

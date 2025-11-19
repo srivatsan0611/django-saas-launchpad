@@ -105,7 +105,7 @@ def register_gateway(name: str, gateway_class: type):
     """
     if not issubclass(gateway_class, BasePaymentGateway):
         raise GatewayException(
-            message=f"Gateway class must extend BasePaymentGateway",
+            message="Gateway class must extend BasePaymentGateway",
             error_code='invalid_gateway_class'
         )
 

@@ -115,4 +115,57 @@ django-saas-launchpad/
 
 ---
 
+## Security Scanning
+
+Automated security checks run on every PR:
+- **Secret detection** (Gitleaks, TruffleHog)
+- **Dependency vulnerabilities** (Safety, pip-audit)
+- **SAST** (Bandit, Semgrep)
+- **Code quality** (Ruff, Black, Pylint, Radon)
+
+**Install Gitleaks (one-time):**
+```bash
+cd /tmp
+wget https://github.com/gitleaks/gitleaks/releases/download/v8.18.0/gitleaks_8.18.0_linux_x64.tar.gz
+tar -xzf gitleaks_8.18.0_linux_x64.tar.gz
+mkdir -p ~/bin
+mv gitleaks ~/bin/
+rm gitleaks_8.18.0_linux_x64.tar.gz
+```
+
+**Run locally:**
+```bash
+~/bin/gitleaks detect --config .gitleaks.toml
+safety check --file requirements.txt
+bandit -r . -ll -x './saas_env/*,./venv/*,./tests/*'
+radon cc . -a --total-average
+```
+
+**Config files:** `.gitleaks.toml`, `.bandit`, `.pylintrc`
+
+
+### PR Checks
+
+#### Blocking (PR Fails)
+
+Secret Detection
+- TruffleHog: Verified secrets
+- Gitleaks: Any secrets
+Dependency Vulnerabilities
+- Safety: ANY vulnerabilities
+- pip-audit: ANY vulnerabilities
+Code Security (SAST)
+- Bandit: Medium/High severity issues (-ll flag)
+- Semgrep: Any security findings
+
+#### Non Blocking (Reports)
+
+Code Quality
+- Ruff: Code style issues 
+- Black: Formatting issues 
+- Pylint: Code smells 
+- Radon: Complexity metrics 
+
+---
+
 **Note:** This is an active development project. More features (subscriptions, invoices, feature flags, analytics) coming soon.

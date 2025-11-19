@@ -1,0 +1,22 @@
+[MASTER]
+ignore=migrations,venv,saas_env,tests
+jobs=4
+
+[MESSAGES CONTROL]
+disable=
+    C0111,  # missing-docstring
+    C0103,  # invalid-name
+    R0903,  # too-few-public-methods
+    R0913,  # too-many-arguments
+    W0212,  # protected-access (for Django Meta classes)
+    E1101,  # no-member (Django dynamic attributes)
+
+[DESIGN]
+max-line-length=120
+max-module-lines=1000
+
+[BASIC]
+good-names=id,pk,i,j,k,_,e
+
+[SIMILARITIES]
+min-similarity-lines=4

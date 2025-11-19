@@ -250,9 +250,9 @@ class TestInvitationSerializer:
         assert data['organization']['name'] == 'Test Org'
         assert data['invited_by']['email'] == 'owner@example.com'
         assert data['role'] == 'member'
-        assert data['is_expired'] == False
-        assert data['is_accepted'] == False
-        assert data['can_accept'] == True
+        assert data['is_expired'] is False
+        assert data['is_accepted'] is False
+        assert data['can_accept'] is True
         assert 'token' in data
         assert 'expires_at' in data
 
@@ -426,7 +426,7 @@ class TestCreateInvitationSerializer:
         )
 
         assert serializer.is_valid()
-        invitation = serializer.save()
+        serializer.save()
 
         # Old invitation should be deleted
         assert not Invitation.objects.filter(id=expired_invitation.id).exists()

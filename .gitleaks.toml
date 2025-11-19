@@ -1,0 +1,44 @@
+title = "Gitleaks Configuration for Django SaaS Launchpad"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allowlist for test keys and safe patterns"
+paths = [
+  '''(^|/)tests/''',
+  '''(^|/)fixtures/''',
+]
+
+regexes = [
+  '''test_[a-z0-9_]+''',
+  '''dummy_[a-z0-9_]+''',
+  '''fake_[a-z0-9_]+''',
+  '''example\.com''',
+]
+
+[[rules]]
+id = "razorpay-key"
+description = "Razorpay API Key"
+regex = '''rzp_(test|live)_[A-Za-z0-9]{14}'''
+keywords = [
+  "rzp_",
+  "razorpay",
+]
+
+[[rules]]
+id = "django-secret-key"
+description = "Django Secret Key"
+regex = '''SECRET_KEY\s*=\s*['"][A-Za-z0-9@#$%^&*()_+-=]{40,}['"]'''
+keywords = [
+  "SECRET_KEY",
+]
+
+[[rules]]
+id = "aws-access-key"
+description = "AWS Access Key"
+regex = '''AKIA[0-9A-Z]{16}'''
+keywords = [
+  "AKIA",
+  "aws",
+]

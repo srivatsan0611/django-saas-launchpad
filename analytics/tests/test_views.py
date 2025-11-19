@@ -8,7 +8,6 @@ Tests cover:
 """
 
 import pytest
-from datetime import datetime
 from django.urls import reverse
 from rest_framework.test import APIClient
 from django.utils.timezone import now

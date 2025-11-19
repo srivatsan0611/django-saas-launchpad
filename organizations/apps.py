@@ -10,4 +10,3 @@ class OrganizationsConfig(AppConfig):
         Import signal handlers when the app is ready.
         This ensures signals are registered before the app starts.
         """
-        import organizations.signals

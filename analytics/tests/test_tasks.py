@@ -10,7 +10,7 @@ Tests cover:
 """
 import pytest
 from datetime import datetime, timedelta
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 from django.utils import timezone
 
 from accounts.models import User

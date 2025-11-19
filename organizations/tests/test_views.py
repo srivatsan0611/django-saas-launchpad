@@ -95,13 +95,13 @@ class TestOrganizationViewSet:
     def test_list_only_user_organizations(self, api_client, owner_user, outsider_user):
         """Test that users only see their own organizations"""
         # Create org for owner
-        org1 = Organization.objects.create(
+        Organization.objects.create(
             name='Owner Org',
             owner=owner_user
         )
 
         # Create org for outsider
-        org2 = Organization.objects.create(
+        Organization.objects.create(
             name='Outsider Org',
             owner=outsider_user
         )
