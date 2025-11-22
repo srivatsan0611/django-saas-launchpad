@@ -6,6 +6,17 @@ on:
   push:
     branches: [main, develop]
   workflow_dispatch:
+    inputs:
+      scan_depth:
+        description: 'Number of commits to scan (for manual runs)'
+        required: false
+        default: '1'
+        type: choice
+        options:
+          - '1'
+          - '5'
+          - '10'
+          - '50'
 
 permissions:
   contents: read
@@ -16,6 +27,19 @@ jobs:
   secret-scanning:
     name: Secret Detection
     runs-on: ubuntu-latest
+    env:
+      # Set base and head commits based on event type
+      SCAN_BASE: >-
+        ${{
+          github.event_name == 'pull_request' && github.event.pull_request.base.sha ||
+          github.event_name == 'workflow_dispatch' && format('HEAD~{0}', inputs.scan_depth) ||
+          'HEAD~1'
+        }}
+      SCAN_HEAD: >-
+        ${{
+          github.event_name == 'pull_request' && github.event.pull_request.head.sha ||
+          'HEAD'
+        }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,8 +50,8 @@ jobs:
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          base: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'HEAD~1' }}
-          head: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'HEAD' }}
+          base: ${{ env.SCAN_BASE }}
+          head: ${{ env.SCAN_HEAD }}
           extra_args: --only-verified
 
       - name: Gitleaks Secret Scan
