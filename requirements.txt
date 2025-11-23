@@ -13,7 +13,7 @@ djangorestframework-simplejwt==5.5.1
 PyJWT==2.8.0
 
 # Async & Background Jobs
-celery==5.3.6
+celery==5.5.3
 redis==5.0.1
 flower==2.0.1
 
