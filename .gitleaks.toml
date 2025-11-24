@@ -8,6 +8,16 @@ description = "Allowlist for test keys and safe patterns"
 paths = [
   '''(^|/)tests/''',
   '''(^|/)fixtures/''',
+  '''(^|/)\.venv/''',
+  '''(^|/)venv/''',
+  '''(^|/)saas/''',
+  '''(^|/)__pycache__/''',
+  '''(^|/)\.pytest_cache/''',
+  '''(^|/)\.ruff_cache/''',
+  '''(^|/)\.mypy_cache/''',
+  '''.*\.pyc$''',
+  '''.*\.dist-info/''',
+  '''.*\.egg-info/''',
 ]
 
 regexes = [
