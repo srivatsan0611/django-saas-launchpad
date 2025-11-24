@@ -42,7 +42,8 @@ semgrep==1.143.1
 radon==6.0.1
 pip-audit==2.9.0
 django-filter==24.3
-
+detect-secrets==1.4.0
+pyright==1.1.391
 # Utils
 python-dateutil==2.8.2
 pytz==2024.1
