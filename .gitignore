@@ -63,3 +63,7 @@ celerybeat.pid
 
 # Docker
 *.log
+
+# Security scan reports
+*.sarif
+gitleaks-report.*
