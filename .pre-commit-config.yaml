@@ -23,7 +23,7 @@ repos:
     hooks:
       - id: ruff
         name: ruff-lint
-        args: ["--fix-only"]
+        args: ["--fix"]
       - id: ruff-format
         name: ruff-format
 
