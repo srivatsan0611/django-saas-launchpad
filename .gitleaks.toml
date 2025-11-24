@@ -18,6 +18,8 @@ paths = [
   '''.*\.pyc$''',
   '''.*\.dist-info/''',
   '''.*\.egg-info/''',
+  '''.*site-packages/''',
+  '''.*Lib\\site-packages/''',
 ]
 
 regexes = [
