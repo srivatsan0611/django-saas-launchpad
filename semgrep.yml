@@ -12,8 +12,3 @@ rules:
     severity: ERROR
     languages: [python]
 
-include:
-  - src/
-exclude:
-  - tests/
-  - venv/
