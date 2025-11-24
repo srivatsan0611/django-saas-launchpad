@@ -1,0 +1,34 @@
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+skip-string-normalization = false
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+# Enable only SAFE autofixes
+fix = true
+unsafe-fixes = false
+
+# Rules you WANT Ruff to enforce
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "W",  # warnings
+    "I",  # import sorting
+]
+
+ignore = [
+    "D",     # ignore docstring enforcement
+    "ANN",   # type annotation linting disabled
+    "N",     # naming conventions
+    "PLR0913", # too many arguments
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.isort]
+known-first-party = ["your_package"]
