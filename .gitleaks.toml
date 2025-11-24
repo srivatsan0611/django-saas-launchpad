@@ -6,20 +6,23 @@ useDefault = true
 [allowlist]
 description = "Allowlist for test keys and safe patterns"
 paths = [
-  '''(^|/)tests/''',
-  '''(^|/)fixtures/''',
-  '''(^|/)\.venv/''',
-  '''(^|/)venv/''',
-  '''(^|/)saas/''',
-  '''(^|/)__pycache__/''',
-  '''(^|/)\.pytest_cache/''',
-  '''(^|/)\.ruff_cache/''',
-  '''(^|/)\.mypy_cache/''',
+  '''(^|[/\\])tests[/\\]''',
+  '''(^|[/\\])fixtures[/\\]''',
+  '''(^|[/\\])\.venv[/\\]''',
+  '''(^|[/\\])venv[/\\]''',
+  '''(^|[/\\])saas[/\\]''',
+  '''(^|[/\\])__pycache__[/\\]''',
+  '''(^|[/\\])\.pytest_cache[/\\]''',
+  '''(^|[/\\])\.ruff_cache[/\\]''',
+  '''(^|[/\\])\.mypy_cache[/\\]''',
   '''.*\.pyc$''',
-  '''.*\.dist-info/''',
-  '''.*\.egg-info/''',
-  '''.*site-packages/''',
-  '''.*Lib\\site-packages/''',
+  '''.*\.dist-info[/\\]''',
+  '''.*\.egg-info[/\\]''',
+  '''.*site-packages[/\\]''',
+  '''.*Lib[/\\]site-packages[/\\]''',
+  '''.*\.venv.*''',
+  '''.*venv.*''',
+  '''.*saas.*''',
 ]
 
 regexes = [
