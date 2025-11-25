@@ -23,6 +23,7 @@ paths = [
   '''.*\.venv.*''',
   '''.*venv.*''',
   '''.*saas.*''',
+  '''.*\.secrets\.baseline$''',
 ]
 
 regexes = [
