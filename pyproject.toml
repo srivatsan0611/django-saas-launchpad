@@ -31,4 +31,4 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.ruff.isort]
-known-first-party = ["your_package"]
+known-first-party = ["myproject"]

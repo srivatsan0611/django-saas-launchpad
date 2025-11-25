@@ -23,7 +23,7 @@ repos:
     hooks:
       - id: ruff
         name: ruff-lint
-        args: ["--fix-only"]
+        args: ["--fix"]
       - id: ruff-format
         name: ruff-format
 
@@ -127,6 +127,6 @@ repos:
 
   # Alternative for Semgrep: Pyright
   - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.390
+    rev: v1.1.391
     hooks:
       - id: pyright
