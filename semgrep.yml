@@ -1,0 +1,14 @@
+rules:
+  - id: insecure-random
+    patterns:
+      - pattern: random.random()
+    message: "Use secrets module instead of random for security-critical operations."
+    severity: WARNING
+    languages: [python]
+
+  - id: subprocess-shell-true
+    pattern: subprocess.Popen(..., shell=True)
+    message: "Avoid shell=True due to command injection risk."
+    severity: ERROR
+    languages: [python]
+

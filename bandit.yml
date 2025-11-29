@@ -1,0 +1,11 @@
+skips: []
+tests: []
+exclude_dirs:
+  - tests
+  - venv
+  - .venv
+
+severity: "HIGH"
+confidence: "HIGH"
+
+recursive: true
