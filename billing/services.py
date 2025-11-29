@@ -193,51 +193,71 @@ class BillingService:
 
         Returns:
             Created or updated Invoice instance
+
+        Raises:
+            KeyError: If required invoice data is missing
+            Exception: If invoice or subscription update fails
         """
-        gateway = invoice_data['gateway']
-        gateway_invoice_id = invoice_data['gateway_invoice_id']
+        try:
+            gateway = invoice_data['gateway']
+            gateway_invoice_id = invoice_data['gateway_invoice_id']
 
-        # Get or create invoice
-        invoice, created = Invoice.objects.get_or_create(
-            gateway_invoice_id=gateway_invoice_id,
-            defaults={
-                'gateway': gateway,
-                'amount_cents': invoice_data.get('amount_cents', 0),
-                'currency': invoice_data.get('currency', 'USD'),
-                'status': 'paid',
-                'issued_at': invoice_data.get('issued_at'),
-                'paid_at': timezone.now(),
-                'invoice_url': invoice_data.get('invoice_url')
-            }
-        )
+            # Get or create invoice
+            invoice, created = Invoice.objects.get_or_create(
+                gateway_invoice_id=gateway_invoice_id,
+                defaults={
+                    'gateway': gateway,
+                    'amount_cents': invoice_data.get('amount_cents', 0),
+                    'currency': invoice_data.get('currency', 'USD'),
+                    'status': 'paid',
+                    'issued_at': invoice_data.get('issued_at'),
+                    'paid_at': timezone.now(),
+                    'invoice_url': invoice_data.get('invoice_url')
+                }
+            )
 
-        if not created:
-            # Update existing invoice
-            invoice.status = 'paid'
-            invoice.paid_at = timezone.now()
-            invoice.invoice_url = invoice_data.get('invoice_url', invoice.invoice_url)
-            invoice.save()
-
-        # Update subscription if linked
-        gateway_subscription_id = invoice_data.get('gateway_subscription_id')
-        if gateway_subscription_id:
-            try:
-                subscription = Subscription.objects.get(
-                    gateway_subscription_id=gateway_subscription_id
-                )
-                invoice.subscription = subscription
-                invoice.organization = subscription.organization
+            if not created:
+                # Update existing invoice
+                invoice.status = 'paid'
+                invoice.paid_at = timezone.now()
+                invoice.invoice_url = invoice_data.get('invoice_url', invoice.invoice_url)
                 invoice.save()
 
-                # Update subscription status if needed
-                if subscription.status in ['past_due', 'unpaid', 'incomplete']:
-                    subscription.status = 'active'
-                    subscription.save()
+            # Update subscription if linked
+            gateway_subscription_id = invoice_data.get('gateway_subscription_id')
+            if gateway_subscription_id:
+                try:
+                    subscription = Subscription.objects.get(
+                        gateway_subscription_id=gateway_subscription_id
+                    )
+                    invoice.subscription = subscription
+                    invoice.organization = subscription.organization
+                    invoice.save()
 
-            except Subscription.DoesNotExist:
-                pass
+                    # Update subscription status if needed
+                    if subscription.status in ['past_due', 'unpaid', 'incomplete']:
+                        subscription.status = 'active'
+                        subscription.save()
 
-        return invoice
+                except Subscription.DoesNotExist:
+                    logger.warning(
+                        f"Subscription {gateway_subscription_id} not found for invoice {gateway_invoice_id}"
+                    )
+                    # Don't fail the whole transaction if subscription isn't found
+                    pass
+                except Exception as e:
+                    logger.error(f"Failed to update subscription for invoice {gateway_invoice_id}: {e}")
+                    # Re-raise to rollback transaction on subscription update failures
+                    raise
+
+            return invoice
+
+        except KeyError as e:
+            logger.error(f"Missing required invoice data: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Payment handling failed for invoice: {e}", exc_info=True)
+            raise
 
     @staticmethod
     @transaction.atomic
@@ -251,47 +271,67 @@ class BillingService:
 
         Returns:
             Updated Invoice instance
+
+        Raises:
+            KeyError: If required invoice data is missing
+            Exception: If invoice or subscription update fails
         """
-        gateway = invoice_data['gateway']
-        gateway_invoice_id = invoice_data['gateway_invoice_id']
+        try:
+            gateway = invoice_data['gateway']
+            gateway_invoice_id = invoice_data['gateway_invoice_id']
 
-        # Get or create invoice
-        invoice, created = Invoice.objects.get_or_create(
-            gateway_invoice_id=gateway_invoice_id,
-            defaults={
-                'gateway': gateway,
-                'amount_cents': invoice_data.get('amount_cents', 0),
-                'currency': invoice_data.get('currency', 'USD'),
-                'status': 'open',
-                'issued_at': invoice_data.get('issued_at'),
-                'invoice_url': invoice_data.get('invoice_url')
-            }
-        )
+            # Get or create invoice
+            invoice, created = Invoice.objects.get_or_create(
+                gateway_invoice_id=gateway_invoice_id,
+                defaults={
+                    'gateway': gateway,
+                    'amount_cents': invoice_data.get('amount_cents', 0),
+                    'currency': invoice_data.get('currency', 'USD'),
+                    'status': 'open',
+                    'issued_at': invoice_data.get('issued_at'),
+                    'invoice_url': invoice_data.get('invoice_url')
+                }
+            )
 
-        if not created:
-            # Update existing invoice
-            invoice.status = 'open'
-            invoice.save()
-
-        # Update subscription status if linked
-        gateway_subscription_id = invoice_data.get('gateway_subscription_id')
-        if gateway_subscription_id:
-            try:
-                subscription = Subscription.objects.get(
-                    gateway_subscription_id=gateway_subscription_id
-                )
-                invoice.subscription = subscription
-                invoice.organization = subscription.organization
+            if not created:
+                # Update existing invoice
+                invoice.status = 'open'
                 invoice.save()
 
-                # Update subscription to past_due
-                subscription.status = 'past_due'
-                subscription.save()
+            # Update subscription status if linked
+            gateway_subscription_id = invoice_data.get('gateway_subscription_id')
+            if gateway_subscription_id:
+                try:
+                    subscription = Subscription.objects.get(
+                        gateway_subscription_id=gateway_subscription_id
+                    )
+                    invoice.subscription = subscription
+                    invoice.organization = subscription.organization
+                    invoice.save()
 
-            except Subscription.DoesNotExist:
-                pass
+                    # Update subscription to past_due
+                    subscription.status = 'past_due'
+                    subscription.save()
 
-        return invoice
+                except Subscription.DoesNotExist:
+                    logger.warning(
+                        f"Subscription {gateway_subscription_id} not found for failed invoice {gateway_invoice_id}"
+                    )
+                    # Don't fail the whole transaction if subscription isn't found
+                    pass
+                except Exception as e:
+                    logger.error(f"Failed to update subscription for failed invoice {gateway_invoice_id}: {e}")
+                    # Re-raise to rollback transaction on subscription update failures
+                    raise
+
+            return invoice
+
+        except KeyError as e:
+            logger.error(f"Missing required invoice data in failed payment: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Failed payment handling failed for invoice: {e}", exc_info=True)
+            raise
 
     @staticmethod
     def create_checkout_session(

@@ -91,6 +91,12 @@ class SubscriptionViewSetTest(TestCase):
             name='Test Org',
             owner=self.user
         )
+        # Create membership for the user
+        Membership.objects.create(
+            user=self.user,
+            organization=self.organization,
+            role='owner'
+        )
         self.client.force_authenticate(user=self.user)
 
         # Create plan
@@ -151,6 +157,12 @@ class InvoiceViewSetTest(TestCase):
         self.organization = Organization.objects.create(
             name='Test Org',
             owner=self.user
+        )
+        # Create membership for the user
+        Membership.objects.create(
+            user=self.user,
+            organization=self.organization,
+            role='owner'
         )
         self.client.force_authenticate(user=self.user)
 

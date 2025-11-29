@@ -12,7 +12,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from .models import Plan, Subscription, Invoice, PaymentMethod
+from .models import Plan, Subscription, Invoice, PaymentMethod, WebhookEvent
 
 
 class SubscriptionInline(admin.TabularInline):
@@ -254,6 +254,20 @@ class SubscriptionAdmin(admin.ModelAdmin):
         """Action to sync selected subscriptions from gateway"""
         from .services import BillingService
         from .gateways.base import GatewayException
+        from django.contrib import messages
+
+        MAX_SYNC_PER_REQUEST = 50
+
+        # Check if too many subscriptions selected
+        count = queryset.count()
+        if count > MAX_SYNC_PER_REQUEST:
+            self.message_user(
+                request,
+                f"Cannot sync more than {MAX_SYNC_PER_REQUEST} subscriptions at once. "
+                f"You selected {count}. Please select fewer items.",
+                level=messages.ERROR
+            )
+            return
 
         synced = 0
         failed = 0
@@ -504,3 +518,52 @@ class PaymentMethodAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         """Optimize queryset with select_related"""
         return super().get_queryset(request).select_related('organization')
+
+
+@admin.register(WebhookEvent)
+class WebhookEventAdmin(admin.ModelAdmin):
+    """
+    Admin interface for WebhookEvent model.
+    Provides read-only view of processed webhook events for debugging and auditing.
+    """
+    list_display = [
+        'event_id',
+        'event_type',
+        'gateway',
+        'processed_at',
+        'created_at'
+    ]
+    list_filter = [
+        'gateway',
+        'event_type',
+        'processed_at',
+        'created_at'
+    ]
+    search_fields = [
+        'event_id',
+        'event_type',
+        'gateway'
+    ]
+    readonly_fields = [
+        'id',
+        'event_id',
+        'event_type',
+        'gateway',
+        'processed_at',
+        'payload',
+        'created_at'
+    ]
+    ordering = ['-created_at']
+    date_hierarchy = 'created_at'
+
+    def has_add_permission(self, request):
+        """Webhook events are created automatically, not manually"""
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        """Allow deletion for cleanup purposes"""
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        """Webhook events should not be modified"""
+        return False

@@ -224,13 +224,25 @@ class CreateCheckoutSessionView(views.APIView):
 
         organization = get_object_or_404(Organization, id=organization_id)
 
-        # Check if user is a member (admin or owner preferred)
-        membership = organization.memberships.filter(user=request.user).first()
+        # Check if user is a member with admin or owner role
+        membership = organization.memberships.filter(
+            user=request.user,
+            role__in=['owner', 'admin']
+        ).first()
+
         if not membership:
-            return Response(
-                {'error': 'You are not a member of this organization'},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            # Check if user is a member at all
+            is_member = organization.memberships.filter(user=request.user).exists()
+            if is_member:
+                return Response(
+                    {'error': 'Only organization owners and admins can create subscriptions'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            else:
+                return Response(
+                    {'error': 'You are not a member of this organization'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
 
         # Validate request data
         serializer = CreateCheckoutSessionSerializer(

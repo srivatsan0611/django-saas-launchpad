@@ -1,5 +1,6 @@
 import uuid
-from django.db import models
+from decimal import Decimal
+from django.db import models, transaction
 from django.utils.text import slugify
 from organizations.models import Organization
 
@@ -100,7 +101,8 @@ class Plan(models.Model):
     @property
     def price_display(self):
         """Returns formatted price (e.g., '$19.99')"""
-        return f"${self.price_cents / 100:.2f}"
+        dollars = Decimal(self.price_cents) / Decimal(100)
+        return f"${dollars:.2f}"
 
 
 class Subscription(models.Model):
@@ -116,6 +118,7 @@ class Subscription(models.Model):
         ('incomplete', 'Incomplete'),
         ('incomplete_expired', 'Incomplete Expired'),
         ('unpaid', 'Unpaid'),
+        ('paused', 'Paused'),
     ]
 
     id = models.UUIDField(
@@ -295,7 +298,8 @@ class Invoice(models.Model):
     @property
     def amount_display(self):
         """Returns formatted amount (e.g., '$19.99 USD')"""
-        return f"${self.amount_cents / 100:.2f} {self.currency}"
+        dollars = Decimal(self.amount_cents) / Decimal(100)
+        return f"${dollars:.2f} {self.currency}"
 
     def is_paid(self):
         """Check if invoice has been paid"""
@@ -376,9 +380,66 @@ class PaymentMethod(models.Model):
     def save(self, *args, **kwargs):
         """Ensure only one default payment method per organization"""
         if self.is_default:
-            # Set all other payment methods for this org to non-default
-            PaymentMethod.objects.filter(
-                organization=self.organization,
-                is_default=True
-            ).exclude(id=self.id).update(is_default=False)
-        super().save(*args, **kwargs)
+            # Use transaction and select_for_update to prevent race conditions
+            with transaction.atomic():
+                # Lock the rows to prevent concurrent updates
+                PaymentMethod.objects.select_for_update().filter(
+                    organization=self.organization,
+                    is_default=True
+                ).exclude(id=self.id).update(is_default=False)
+                super().save(*args, **kwargs)
+        else:
+            super().save(*args, **kwargs)
+
+
+class WebhookEvent(models.Model):
+    """
+    Tracks processed webhook events to ensure idempotency.
+    Prevents duplicate processing of the same webhook event.
+    """
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the webhook event record"
+    )
+    event_id = models.CharField(
+        max_length=255,
+        db_index=True,
+        help_text="Unique event ID from the payment gateway"
+    )
+    event_type = models.CharField(
+        max_length=100,
+        help_text="Type of webhook event (e.g., 'subscription.activated')"
+    )
+    gateway = models.CharField(
+        max_length=50,
+        help_text="Payment gateway that sent the webhook"
+    )
+    processed_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When this event was processed"
+    )
+    payload = models.JSONField(
+        help_text="Complete webhook payload for debugging"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Webhook Event'
+        verbose_name_plural = 'Webhook Events'
+        indexes = [
+            models.Index(fields=['event_id', 'gateway']),
+            models.Index(fields=['event_type', 'gateway']),
+            models.Index(fields=['created_at']),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['event_id', 'gateway'],
+                name='unique_event_per_gateway'
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.gateway} - {self.event_type} ({self.event_id})"
