@@ -76,8 +76,14 @@ class RazorpayWebhookTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-    def test_webhook_invalid_json(self):
+    @patch('billing.webhooks.get_gateway')
+    def test_webhook_invalid_json(self, mock_get_gateway):
         """Test webhook with invalid JSON"""
+        # Mock gateway to pass signature verification
+        mock_gateway = MagicMock()
+        mock_gateway.verify_webhook_signature.return_value = True
+        mock_get_gateway.return_value = mock_gateway
+
         url = reverse('webhook-razorpay')
         response = self.client.post(
             url,

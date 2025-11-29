@@ -1,10 +1,13 @@
 from typing import Optional, Dict, Any
+import logging
 from django.utils import timezone
 from django.db import transaction
 from .models import Plan, Subscription, Invoice, PaymentMethod
 from .gateways.factory import get_gateway
 from .gateways.base import GatewayException
 from organizations.models import Organization
+
+logger = logging.getLogger(__name__)
 
 
 class BillingService:

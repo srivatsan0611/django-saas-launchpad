@@ -56,8 +56,13 @@ def handle_razorpay_webhook(request):
 
         logger.info(f"Received Razorpay webhook: {event_type} (ID: {event_id})")
 
-        # Check if event was already processed (idempotency)
-        if WebhookEvent.objects.filter(event_id=event_id, gateway='razorpay').exists():
+        # Atomically check if event was already processed (idempotency) and create if not
+        webhook_event, created = WebhookEvent.objects.get_or_create(
+            event_id=event_id,
+            gateway='razorpay',
+            defaults={'event_type': event_type, 'payload': event_data, 'received_at': timezone.now()},
+        )
+        if not created:
             logger.info(f"Event {event_id} already processed, skipping")
             return HttpResponse(status=200)
 
@@ -133,8 +138,13 @@ def handle_generic_webhook(request, gateway_name):
 
         logger.info(f"Received {gateway_name} webhook: {event_type} (ID: {event_id})")
 
-        # Check if event was already processed (idempotency)
-        if WebhookEvent.objects.filter(event_id=event_id, gateway=gateway_name).exists():
+        # Atomically check if event was already processed (idempotency) and create if not
+        webhook_event, created = WebhookEvent.objects.get_or_create(
+            event_id=event_id,
+            gateway=gateway_name,
+            defaults={'event_type': event_type, 'payload': event_data, 'received_at': timezone.now()},
+        )
+        if not created:
             logger.info(f"Event {event_id} already processed, skipping")
             return HttpResponse(status=200)
 
@@ -187,14 +197,6 @@ def handle_subscription_activated(data, gateway, event_id, event_data):
 
         logger.info(f"Subscription {subscription_id} activated")
 
-        # Mark event as processed
-        WebhookEvent.objects.create(
-            event_id=event_id,
-            event_type='subscription.activated',
-            gateway=gateway,
-            payload=event_data
-        )
-
         # Trigger email notification (async)
         from .tasks import send_subscription_activated_email
         send_subscription_activated_email.delay(str(subscription.id))
@@ -229,14 +231,6 @@ def handle_subscription_updated(data, gateway, event_id, event_data):
         BillingService.sync_subscription_from_gateway(subscription)
 
         logger.info(f"Subscription {subscription_id} updated")
-
-        # Mark event as processed
-        WebhookEvent.objects.create(
-            event_id=event_id,
-            event_type='subscription.updated',
-            gateway=gateway,
-            payload=event_data
-        )
 
     except Subscription.DoesNotExist:
         error_msg = f"Subscription {subscription_id} not found in database for gateway {gateway}"
@@ -279,14 +273,6 @@ def handle_subscription_cancelled(data, gateway, event_id, event_data):
 
         logger.info(f"Subscription {subscription_id} cancelled")
 
-        # Mark event as processed
-        WebhookEvent.objects.create(
-            event_id=event_id,
-            event_type='subscription.cancelled',
-            gateway=gateway,
-            payload=event_data
-        )
-
         # Trigger email notification (async)
         from .tasks import send_subscription_cancelled_email
         send_subscription_cancelled_email.delay(str(subscription.id))
@@ -322,14 +308,6 @@ def handle_subscription_paused(data, gateway, event_id, event_data):
 
         logger.info(f"Subscription {subscription_id} paused")
 
-        # Mark event as processed
-        WebhookEvent.objects.create(
-            event_id=event_id,
-            event_type='subscription.paused',
-            gateway=gateway,
-            payload=event_data
-        )
-
     except Subscription.DoesNotExist:
         error_msg = f"Subscription {subscription_id} not found in database for gateway {gateway}"
         logger.warning(error_msg)
@@ -360,14 +338,6 @@ def handle_subscription_resumed(data, gateway, event_id, event_data):
         subscription.save()
 
         logger.info(f"Subscription {subscription_id} resumed")
-
-        # Mark event as processed
-        WebhookEvent.objects.create(
-            event_id=event_id,
-            event_type='subscription.resumed',
-            gateway=gateway,
-            payload=event_data
-        )
 
     except Subscription.DoesNotExist:
         error_msg = f"Subscription {subscription_id} not found in database for gateway {gateway}"
@@ -400,14 +370,6 @@ def handle_subscription_halted(data, gateway, event_id, event_data):
 
         logger.info(f"Subscription {subscription_id} halted")
 
-        # Mark event as processed
-        WebhookEvent.objects.create(
-            event_id=event_id,
-            event_type='subscription.halted',
-            gateway=gateway,
-            payload=event_data
-        )
-
     except Subscription.DoesNotExist:
         error_msg = f"Subscription {subscription_id} not found in database for gateway {gateway}"
         logger.warning(error_msg)
@@ -438,14 +400,6 @@ def handle_invoice_paid(data, gateway, event_id, event_data):
         invoice = BillingService.handle_successful_payment(invoice_data)
 
         logger.info(f"Invoice {invoice.gateway_invoice_id} paid successfully")
-
-        # Mark event as processed
-        WebhookEvent.objects.create(
-            event_id=event_id,
-            event_type='invoice.paid',
-            gateway=gateway,
-            payload=event_data
-        )
 
         # Trigger email notification (async)
         from .tasks import send_invoice_paid_email
@@ -478,14 +432,6 @@ def handle_payment_failed(data, gateway, event_id, event_data):
         invoice = BillingService.handle_failed_payment(invoice_data)
 
         logger.info(f"Payment failed for invoice {invoice.gateway_invoice_id}")
-
-        # Mark event as processed
-        WebhookEvent.objects.create(
-            event_id=event_id,
-            event_type='payment.failed',
-            gateway=gateway,
-            payload=event_data
-        )
 
         # Trigger email notification (async)
         from .tasks import send_payment_failed_email

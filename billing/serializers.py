@@ -223,8 +223,8 @@ class CreateCheckoutSessionSerializer(serializers.Serializer):
         help_text="Number of days for trial period"
     )
 
-    def validate_success_url(self, value):
-        """Validate success_url against allowed domains"""
+    def _validate_redirect_url(self, value):
+        """Helper method to validate redirect URLs against allowed domains"""
         from urllib.parse import urlparse
         from django.conf import settings
 
@@ -245,29 +245,14 @@ class CreateCheckoutSessionSerializer(serializers.Serializer):
                 )
 
         return value
+
+    def validate_success_url(self, value):
+        """Validate success_url against allowed domains"""
+        return self._validate_redirect_url(value)
 
     def validate_cancel_url(self, value):
         """Validate cancel_url against allowed domains"""
-        from urllib.parse import urlparse
-        from django.conf import settings
-
-        parsed = urlparse(value)
-        allowed_domains = getattr(settings, 'ALLOWED_REDIRECT_DOMAINS', [])
-
-        # If no allowed domains configured, only allow same-origin (relative URLs)
-        if not allowed_domains:
-            if parsed.netloc:
-                raise serializers.ValidationError(
-                    "Only relative URLs are allowed. Configure ALLOWED_REDIRECT_DOMAINS in settings to allow external redirects."
-                )
-        else:
-            # Check if domain is in allowed list
-            if parsed.netloc and parsed.netloc not in allowed_domains:
-                raise serializers.ValidationError(
-                    f"Domain '{parsed.netloc}' is not in the list of allowed redirect domains."
-                )
-
-        return value
+        return self._validate_redirect_url(value)
 
     def validate_plan_id(self, value):
         """Validate that plan exists and is active"""

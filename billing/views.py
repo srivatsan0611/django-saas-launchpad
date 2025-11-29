@@ -84,15 +84,7 @@ class SubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
         """
         subscription = self.get_object()
 
-        # Validate that user has permission for this organization
-        if not subscription.organization.memberships.filter(
-            user=request.user,
-            role__in=['owner', 'admin']
-        ).exists():
-            return Response(
-                {'error': 'You do not have permission to cancel this subscription'},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        # Permission is already enforced by IsOrganizationAdminOrOwner in get_permissions()
 
         serializer = CancelSubscriptionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
