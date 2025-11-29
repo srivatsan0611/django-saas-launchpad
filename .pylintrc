@@ -10,7 +10,18 @@ disable=
     R0913,  # too-many-arguments
     W0212,  # protected-access (for Django Meta classes)
     E1101,  # no-member (Django dynamic attributes)
-
+    C0114,  # Missing module docstring
+    C0115,  # Missing class docstring
+    C0116,  # Missing function docstring
+    R0903,  # too few public methods
+    W0511,  # TODO:
+    W0703,  # broad except
+    R0401,  # cyclic import
+    W0611,  # unused import
+    W0612,  # unused variable
+    W0231,  # __init__ method from base class not called
+    W0201,  # Attribute defined outside __init__
+    W0233,  # __init__ of derived private class not called
 [DESIGN]
 max-line-length=120
 max-module-lines=1000
@@ -20,3 +31,14 @@ good-names=id,pk,i,j,k,_,e
 
 [SIMILARITIES]
 min-similarity-lines=4
+
+[FORMAT]
+indent-string='    '
+max-line-length = 88
+
+[MASTER]
+ignore = venv, .venv, build, dist, migrations
+
+[REPORTS]
+output-format = colorized
+score = no
