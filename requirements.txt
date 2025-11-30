@@ -18,7 +18,7 @@ redis==5.0.1
 flower==2.0.1
 
 # Payments
-stripe==8.2.0
+stripe==14.0.1
 razorpay==1.4.1
 
 # Monitoring & Security
