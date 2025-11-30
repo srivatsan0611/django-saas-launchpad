@@ -32,7 +32,7 @@ pytest-cov==4.1.0
 factory-boy==3.3.0
 
 # Code Quality
-ruff==0.2.2
+ruff==0.14.7
 black==24.3.0
 
 # Security Scanning
