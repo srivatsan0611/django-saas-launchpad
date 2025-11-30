@@ -135,10 +135,14 @@ class RazorpayGateway(BasePaymentGateway):
         Razorpay subscriptions are linked to plans created in the dashboard.
         """
         try:
+            # Make total_count configurable with a sensible default
+            # Default to 120 (~10 years for monthly, allows for indefinite subscriptions)
+            total_count = metadata.get('total_count', 120) if metadata else 120
+
             subscription_data = {
                 'plan_id': plan_id,
                 'customer_id': customer_id,
-                'total_count': 12,  # Number of billing cycles (12 months for yearly)
+                'total_count': total_count,  # Number of billing cycles (configurable via metadata)
                 'quantity': 1
             }
 
@@ -147,9 +151,11 @@ class RazorpayGateway(BasePaymentGateway):
                 trial_end = datetime.now() + timedelta(days=trial_days)
                 subscription_data['start_at'] = int(trial_end.timestamp())
 
-            # Add metadata as notes
+            # Add metadata as notes (exclude total_count from notes)
             if metadata:
-                subscription_data['notes'] = metadata
+                notes = {k: v for k, v in metadata.items() if k != 'total_count'}
+                if notes:
+                    subscription_data['notes'] = notes
 
             subscription = self.client.subscription.create(data=subscription_data)
 
