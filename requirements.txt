@@ -34,6 +34,8 @@ factory-boy==3.3.0
 # Code Quality
 ruff==0.2.2
 black==24.3.0
+pre-commit==4.5.0
+setuptools>=80.0.0
 
 # Security Scanning
 safety==3.7.0
