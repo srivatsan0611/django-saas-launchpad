@@ -24,7 +24,7 @@ You're building a project management SaaS. Clone this repo, configure Razorpay k
 ## Dev Setup Instructions
 
 ### Prerequisites
-- Python 3.11+
+- **Python 3.12** (required)
 - PostgreSQL (or SQLite for quick testing)
 - Redis (for Celery background tasks)
 
@@ -38,7 +38,7 @@ cd django-saas-launchpad
 
 2. **Create virtual environment:**
 ```bash
-python3 -m venv saas_env
+python3.12 -m venv saas_env
 source saas_env/bin/activate  # On Windows: saas_env\Scripts\activate
 ```
 
@@ -47,9 +47,14 @@ source saas_env/bin/activate  # On Windows: saas_env\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. **Set up environment variables:**
+4. **Set up pre-commit hooks:**
 ```bash
-cp .env.example .env 
+pre-commit install
+```
+
+5. **Set up environment variables:**
+```bash
+cp .env.example .env
 ```
 
 Add to `.env`:
@@ -69,24 +74,24 @@ DEFAULT_PAYMENT_GATEWAY=razorpay
 EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
 ```
 
-5. **Run migrations:**
+6. **Run migrations:**
 ```bash
 python manage.py migrate
 ```
 
-6. **Create superuser:**
+7. **Create superuser:**
 ```bash
 python manage.py createsuperuser
 # Email: admin@saaslaunchpad.com
 # Password: admin123
 ```
 
-7. **Run development server:**
+8. **Run development server:**
 ```bash
 python manage.py runserver
 ```
 
-8. **Run tests:**
+9. **Run tests:**
 ```bash
 # All tests
 pytest
@@ -210,13 +215,13 @@ git push --no-verify
 - **Target**: Python 3.11
 
 #### 2. **Ruff** - Fast Linter & Formatter
-- **What it does**: 
+- **What it does**:
   - Lints code for errors (pycodestyle, pyflakes)
   - Formats code (alternative to Black)
   - Sorts imports
 - **Config**: `pyproject.toml`
 - **Auto-fixes**: Yes (safe fixes only)
-- **Rules enabled**: 
+- **Rules enabled**:
   - `E`: pycodestyle errors
   - `F`: pyflakes
   - `W`: warnings
@@ -408,10 +413,10 @@ Code Security (SAST)
 #### Non Blocking (Reports)
 
 Code Quality
-- Ruff: Code style issues 
-- Black: Formatting issues 
-- Pylint: Code smells 
-- Radon: Complexity metrics 
+- Ruff: Code style issues
+- Black: Formatting issues
+- Pylint: Code smells
+- Radon: Complexity metrics
 
 ---
 

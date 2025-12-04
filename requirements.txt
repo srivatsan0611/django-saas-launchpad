@@ -1,5 +1,5 @@
 # Core Django
-Django==4.2.26
+Django==4.2.27
 djangorestframework==3.16.1
 django-cors-headers==4.3.1
 django-environ==0.12.0
@@ -10,7 +10,7 @@ dj-database-url==2.1.0
 
 # Auth
 djangorestframework-simplejwt==5.5.1
-PyJWT==2.8.0
+PyJWT==2.10.1
 
 # Async & Background Jobs
 celery==5.5.3
@@ -34,11 +34,13 @@ factory-boy==3.3.0
 # Code Quality
 ruff==0.2.2
 black==24.3.0
+pre-commit==4.5.0
+setuptools>=80.0.0
 
 # Security Scanning
 safety==3.7.0
 bandit==1.9.1
-semgrep==1.143.1
+semgrep==1.144.0
 radon==6.0.1
 pip-audit==2.9.0
 django-filter==24.3
