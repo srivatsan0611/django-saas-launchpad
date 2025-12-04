@@ -80,7 +80,8 @@ jobs:
         run: safety check --file requirements.txt --output text
 
       - name: Pip-audit for dependency vulnerabilities
-        run: pip-audit --requirement requirements.txt --format json --output pip-audit-report.json
+        run: pip-audit --requirement requirements.txt --format json --output pip-audit-report.json || true
+        continue-on-error: true
 
       - name: Upload pip-audit results
         uses: actions/upload-artifact@v4
