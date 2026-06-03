@@ -1,0 +1,12 @@
+{
+  "venvPath": ".",
+  "venv": "django_saas",
+  "typeCheckingMode": "off",
+  "exclude": [
+    "**/migrations/**",
+    "**/tests/**",
+    "django_saas/**",
+    "saas_env/**",
+    "venv/**"
+  ]
+}

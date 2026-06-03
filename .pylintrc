@@ -1,5 +1,5 @@
 [MASTER]
-ignore=migrations,venv,saas_env,tests
+ignore=migrations,venv,saas_env,tests,.venv,build,dist
 jobs=4
 
 [MESSAGES CONTROL]
@@ -22,6 +22,9 @@ disable=
     W0231,  # __init__ method from base class not called
     W0201,  # Attribute defined outside __init__
     W0233,  # __init__ of derived private class not called
+    W0621,  # redefined-outer-name (pytest fixture pattern)
+    W0613,  # unused-argument (DRF *args/**kwargs contract, pytest db fixture)
+    E0401,  # import-error (Django/DRF not on pylint's path outside venv)
 [DESIGN]
 max-line-length=120
 max-module-lines=1000
@@ -34,10 +37,7 @@ min-similarity-lines=4
 
 [FORMAT]
 indent-string='    '
-max-line-length = 88
-
-[MASTER]
-ignore = venv, .venv, build, dist, migrations
+max-line-length = 120
 
 [REPORTS]
 output-format = colorized
