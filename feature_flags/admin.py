@@ -118,7 +118,6 @@ class FeatureFlagAdmin(admin.ModelAdmin):
         )
 
     enabled_status.short_description = "Status"
-    enabled_status.boolean = True
 
     def is_global_display(self, obj):
         """Display if flag is global"""
@@ -131,7 +130,6 @@ class FeatureFlagAdmin(admin.ModelAdmin):
         )
 
     is_global_display.short_description = "Is Global?"
-    is_global_display.boolean = True
 
     def has_rules(self, obj):
         """Display if flag has rules configured"""
@@ -145,7 +143,6 @@ class FeatureFlagAdmin(admin.ModelAdmin):
         return format_html('<span style="color: gray;">No</span>')
 
     has_rules.short_description = "Has Rules"
-    has_rules.boolean = True
 
     def rules_display(self, obj):
         """Display rules in a formatted way"""
