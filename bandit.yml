@@ -4,6 +4,8 @@ exclude_dirs:
   - tests
   - venv
   - .venv
+  - django_saas
+  - saas_env
 
 severity: "HIGH"
 confidence: "HIGH"

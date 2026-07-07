@@ -16,7 +16,7 @@ repos:
     rev: 24.4.2
     hooks:
       - id: black
-        language_version: python3.12
+        language_version: python3
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.6.0
@@ -34,7 +34,16 @@ repos:
         types: [python]
         args:
           - "--rcfile=.pylintrc"
+          - "--ignore-paths=.*/migrations/.*,.*/tests/.*,django_saas/.*,saas_env/.*,venv/.*"
         stages: [pre-commit]
+        exclude: |
+          (?x)^(
+            .*/migrations/.*|
+            .*/tests/.*|
+            django_saas/.*|
+            saas_env/.*|
+            venv/.*
+          )$
 
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.9
